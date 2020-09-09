@@ -1,0 +1,51 @@
+version: "3"
+
+networks:
+  app:
+    driver: bridge
+
+volumes:
+  database:
+
+services:
+  nginx:
+    build:
+      context: .
+      dockerfile: .docker/nginx/Dockerfile
+    networks:
+      - app
+    ports:
+      - "80:80"
+    volumes:
+      - .:/src/
+
+  php-fpm:
+    build:
+      context: .
+      dockerfile: .docker/php-fpm/Dockerfile
+    networks:
+      - app
+    volumes:
+      - .:/src
+
+  mysql:
+    image: mysql:8.0.21
+    env_file:
+      - .env
+    command: --default-authentication-plugin=mysql_native_password
+    ports:
+      - "3306:3306"
+    environment:
+      - MYSQL_ROOT_PASSWORD=${DB_PASSWORD}
+      - MYSQL_DATABASE=${DB_DATABASE}
+    networks:
+      - app
+    volumes:
+      - database:/var/lib/mysql
+
+  mailhog:
+    image: mailhog/mailhog:v1.0.0
+    networks:
+      - app
+    ports:
+      - 8025:8025
